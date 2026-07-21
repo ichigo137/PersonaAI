@@ -3,7 +3,7 @@ package com.example.personaai.features.chat.data.local
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "messages")
+@Entity(tableName = "chat_messages")
 data class ChatEntity(
 
     @PrimaryKey(autoGenerate = true)
@@ -14,4 +14,5 @@ data class ChatEntity(
     val isUser: Boolean,
 
     val timestamp: Long
+
 )

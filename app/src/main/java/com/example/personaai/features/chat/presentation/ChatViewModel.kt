@@ -1,64 +1,87 @@
 package com.example.personaai.features.chat.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.personaai.features.chat.domain.model.ChatMessage
+import com.example.personaai.features.chat.domain.repository.ChatRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-class ChatViewModel : ViewModel() {
+import javax.inject.Inject
 
-    private val _uiState = MutableStateFlow(ChatUiState())
+@HiltViewModel
+class ChatViewModel @Inject constructor(
+    private val repository: ChatRepository
+) : ViewModel() {
 
-    val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+    private val _input = MutableStateFlow("")
+    val input = _input.asStateFlow()
+
+    val messages = repository
+        .getMessages()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val uiState: StateFlow<ChatUiState> =
+        messages
+            .map { list ->
+                ChatUiState(
+                    messages = list,
+                    input = _input.value,
+                    isLoading = false
+                )
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                ChatUiState()
+            )
 
     fun onInputChanged(text: String) {
-        _uiState.value = _uiState.value.copy(
-            input = text
-        )
+        _input.value = text
     }
-
-    private var nextId = 1L
 
     fun sendMessage() {
 
-        val message = uiState.value.input.trim()
+        val text = _input.value.trim()
 
-        if (message.isBlank()) return
+        if (text.isBlank()) return
 
-        val userMessage = ChatMessage(
-            id = nextId++,
-            text = message,
-            isUser = true,
-            timestamp = System.currentTimeMillis()
-        )
-
-        _uiState.value = _uiState.value.copy(
-            messages = _uiState.value.messages + userMessage,
-            input = ""
-        )
-
-        fakeReply()
-    }
-
-    private fun fakeReply() {
+        _input.value = ""
 
         viewModelScope.launch {
 
-            delay(1000)
-
-            val ai = ChatMessage(
-                id = nextId++,
-                text = "I'm still under development.",
-                isUser = false,
-                timestamp = System.currentTimeMillis()
+            repository.insertMessage(
+                ChatMessage(
+                    text = text,
+                    isUser = true
+                )
             )
 
-            _uiState.value = _uiState.value.copy(
-                messages = _uiState.value.messages + ai
+            delay(800)
+
+            repository.insertMessage(
+                ChatMessage(
+                    text = "I'm still under development.",
+                    isUser = false
+                )
             )
+        }
+    }
+
+    fun clearChat() {
+        viewModelScope.launch {
+            repository.clearChat()
         }
     }
 }

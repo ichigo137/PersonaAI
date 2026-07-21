@@ -24,20 +24,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    viewModel: ChatViewModel = viewModel()
+    viewModel: ChatViewModel = hiltViewModel()
 ) {
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
 
@@ -77,11 +77,19 @@ fun ChatScreen(
 
                 items(
                     items = uiState.messages,
-                    key = { it.id }
+                    key = { "${it.timestamp}-${it.isUser}" }
                 ) { message ->
 
                     MessageBubble(message = message)
+
                 }
+            }
+
+            if (uiState.isLoading) {
+                Text(
+                    text = "PersonaAI is typing...",
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
 
             Row(
