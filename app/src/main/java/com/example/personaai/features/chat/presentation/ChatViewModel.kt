@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.combine
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
@@ -33,19 +34,19 @@ class ChatViewModel @Inject constructor(
         )
 
     val uiState: StateFlow<ChatUiState> =
-        messages
-            .map { list ->
-                ChatUiState(
-                    messages = list,
-                    input = _input.value,
-                    isLoading = false
-                )
-            }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5000),
-                ChatUiState()
+        combine(messages, _input) { list, input ->
+
+            ChatUiState(
+                messages = list,
+                input = input,
+                isLoading = false
             )
+
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ChatUiState()
+        )
 
     fun onInputChanged(text: String) {
         _input.value = text

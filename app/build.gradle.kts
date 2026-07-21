@@ -42,6 +42,16 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    defaultConfig {
+
+        buildConfigField(
+            "String",
+            "HF_API_KEY",
+            "\"${project.findProperty("HF_API_KEY") ?: ""}\""
+        )
     }
 }
 
