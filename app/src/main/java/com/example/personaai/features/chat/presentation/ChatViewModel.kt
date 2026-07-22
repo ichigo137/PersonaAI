@@ -1,88 +1,98 @@
 package com.example.personaai.features.chat.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.personaai.features.chat.domain.model.ChatMessage
 import com.example.personaai.features.chat.domain.repository.ChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlinx.coroutines.flow.combine
+
+data class ChatUiState(
+    val messages: List<com.example.personaai.features.chat.domain.model.ChatMessage> = emptyList(),
+    val input: String = "",
+    val isLoading: Boolean = false
+)
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val repository: ChatRepository
 ) : ViewModel() {
+
+    val conversationId: String = checkNotNull(savedStateHandle["conversationId"])
 
     private val _input = MutableStateFlow("")
     val input = _input.asStateFlow()
 
-    val messages = repository
-        .getMessages()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
+    private val _isSending = MutableStateFlow(false)
+
+    val uiState: StateFlow<ChatUiState> = combine(
+        repository.observeMessages(conversationId),
+        _input,
+        _isSending
+    ) { messages, input, isSending ->
+        ChatUiState(
+            messages = messages,
+            input = input,
+            isLoading = isSending
         )
-
-    val uiState: StateFlow<ChatUiState> =
-        combine(messages, _input) { list, input ->
-
-            ChatUiState(
-                messages = list,
-                input = input,
-                isLoading = false
-            )
-
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ChatUiState()
-        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ChatUiState()
+    )
 
     fun onInputChanged(text: String) {
         _input.value = text
     }
 
     fun sendMessage() {
-
         val text = _input.value.trim()
-
-        if (text.isBlank()) return
+        if (text.isBlank() || _isSending.value) return
 
         _input.value = ""
+        _isSending.value = true
 
         viewModelScope.launch {
+            try {
+                repository.sendMessage(conversationId, text)
+            } finally {
+                _isSending.value = false
+            }
+        }
+    }
+}
 
-            repository.insertMessage(
-                ChatMessage(
-                    text = text,
-                    isUser = true
-                )
-            )
+/** ViewModel-scoped companion for creating new conversations before navigating. */
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val repository: ChatRepository
+) : ViewModel() {
 
-            delay(800)
-
-            repository.insertMessage(
-                ChatMessage(
-                    text = "I'm still under development.",
-                    isUser = false
-                )
-            )
+    fun createConversationAndNavigate(onCreated: (String) -> Unit) {
+        viewModelScope.launch {
+            val id = repository.createConversation("New chat")
+            onCreated(id)
         }
     }
 
-    fun clearChat() {
-        viewModelScope.launch {
-            repository.clearChat()
-        }
+    val conversations = repository.observeConversations()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    fun deleteConversation(conversationId: String) {
+        viewModelScope.launch { repository.deleteConversation(conversationId) }
     }
 }

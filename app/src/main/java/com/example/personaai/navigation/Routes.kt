@@ -1,7 +1,12 @@
 package com.example.personaai.navigation
 
-sealed class Routes(val route: String) {
-    data object Chat : Routes("chat")
-    data object Profile : Routes("profile")
-    data object Settings : Routes("settings")
+object Routes {
+    const val LOGIN = "login"
+    const val REGISTER = "register"
+    const val HOME = "home"
+    const val CHAT = "chat/{conversationId}"
+
+    const val CHAT_ARG = "conversationId"
+
+    fun chat(conversationId: String) = "chat/$conversationId"
 }

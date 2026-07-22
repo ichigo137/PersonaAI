@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "874199798781",
+    "project_id": "personaai-b3318",
+    "storage_bucket": "personaai-b3318.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874199798781:android:58e681c01b7a65484c3f94",
+        "android_client_info": {
+          "package_name": "com.example.personaai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByd1esfb5KeKX6ijo5IHbIRQOEC7PkmEs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

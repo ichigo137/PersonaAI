@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
 }
 android {
     namespace = "com.example.personaai"
@@ -83,4 +84,7 @@ dependencies {
 
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
 }
