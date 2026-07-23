@@ -1,5 +1,7 @@
 package com.example.personaai.core.ai
 
+import com.example.personaai.core.ai.routing.TaskClassifier
+import com.example.personaai.core.ai.routing.TaskType
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,13 +17,27 @@ class PersonaRouter @Inject constructor(
         conversation: List<String> = emptyList()
     ): String {
 
-        return when (classifier.classify(prompt)) {
+        val task = classifier.classify(prompt)
 
-            TaskType.LOCAL ->
+        return when (task) {
+
+            // Offline tools (temporarily handled locally)
+            TaskType.CALCULATOR,
+            TaskType.MEMORY,
+            TaskType.CHAT -> {
                 localAi.generateResponse(prompt, conversation)
+            }
 
-            TaskType.CLOUD ->
+            // AI-heavy tasks
+            TaskType.GENERAL,
+            TaskType.CODING,
+            TaskType.SUMMARY,
+            TaskType.TRANSLATION,
+            TaskType.SEARCH,
+            TaskType.WEATHER,
+            TaskType.UNKNOWN -> {
                 cloudAi.generateResponse(prompt, conversation)
+            }
         }
     }
 }

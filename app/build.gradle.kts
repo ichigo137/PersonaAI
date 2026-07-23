@@ -87,4 +87,5 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation("com.google.mediapipe:tasks-genai:0.10.27")
 }
