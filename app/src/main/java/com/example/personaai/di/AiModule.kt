@@ -1,7 +1,7 @@
 package com.example.personaai.di
 
 import com.example.personaai.core.ai.AiProvider
-import com.example.personaai.core.ai.HuggingFaceProvider
+import com.example.personaai.core.ai.DefaultAiProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,5 +14,7 @@ abstract class AiModule {
 
     @Binds
     @Singleton
-    abstract fun bindAiProvider(impl: HuggingFaceProvider): AiProvider
+    abstract fun bindAiProvider(
+        impl: DefaultAiProvider
+    ): AiProvider
 }
