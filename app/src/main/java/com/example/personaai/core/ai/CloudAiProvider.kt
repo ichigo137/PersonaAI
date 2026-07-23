@@ -4,13 +4,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class CloudAiProvider @Inject constructor() : AiEngine {
+class CloudAiProvider @Inject constructor(
+    private val huggingFaceEngine: HuggingFaceEngine
+) : AiEngine {
 
     override suspend fun generateResponse(
         prompt: String,
         conversation: List<String>
     ): String {
 
-        return "🔵 CLOUD ROUTER WORKING\n$prompt"
+        // Temporary until we connect HuggingFaceEngine
+        return "🔵 CLOUD ROUTER WORKING\n\n$prompt"
     }
 }

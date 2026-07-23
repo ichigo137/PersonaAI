@@ -7,8 +7,8 @@ import javax.inject.Singleton
 class PersonaRouter @Inject constructor(
     private val classifier: TaskClassifier,
     private val localAi: LocalAiProvider,
-    private val cloudAi: CloudAiProvider
-) {
+    private val cloudAi: HuggingFaceEngine
+){
 
     suspend fun generateResponse(
         prompt: String,
